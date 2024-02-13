@@ -14,6 +14,12 @@ router.get(
   asyncHandler(async (req, res) => {
     try {
       const searchTerm = req.query.search;
+
+      if (!searchTerm) {
+        res.status(400).json({ message: "Please type something..." });
+        throw new Error("Please provide a search term");
+      }
+
       const query = {
         $or: [
           { username: { $regex: searchTerm, $options: "i" } },
@@ -25,7 +31,7 @@ router.get(
         _id: { $ne: req.user._id },
       });
 
-      res.json(users);
+      res.json(users.length > 0 ? users : { message: "No users found" });
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: error.message });
