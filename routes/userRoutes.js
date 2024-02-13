@@ -7,6 +7,7 @@ const isAuth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Get all users
 router.get(
   "/",
   isAuth,
@@ -20,7 +21,6 @@ router.get(
         ],
       };
 
-      // const users = await User.find(query);
       const users = await User.find(query).find({
         _id: { $ne: req.user._id },
       });
@@ -28,11 +28,13 @@ router.get(
       res.json(users);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({ message: error.message });
+      throw new Error(error.message);
     }
   })
 );
 
+// Create a new user
 router.post(
   "/register",
   asyncHandler(async (req, res) => {
@@ -74,16 +76,22 @@ router.post(
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({ message: error.message });
     }
   })
 );
 
+// Login user
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
     try {
       const { email, password } = req.body;
+
+      if (!email || !password) {
+        res.status(400).json({ message: "Please fill in all fields" });
+        throw new Error("Please fill in all fields");
+      }
 
       const user = await User.findOne({ email });
 
@@ -101,7 +109,6 @@ router.post(
       }
     } catch (error) {
       console.log(error);
-
       res.status(500).json({ message: "Server error", error: error.message });
     }
   })
