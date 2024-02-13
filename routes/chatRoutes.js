@@ -84,14 +84,37 @@ router.get(
   })
 );
 
-
 // Create Group Chat Route
 router.post(
   "/room",
   isAuth,
   asyncHandler(async (req, res) => {
     try {
-      res.json({ message: "create room" });
+      if (!req.body.users && !req.body.roomName) {
+        return res
+          .status(400)
+          .json({ message: "Users and Room Name is required" });
+      }
+      let users = JSON.parse(req.body.users);
+      if (users.length < 2) {
+        return res
+          .status(400)
+          .json({ message: "Room chat should have at least 2 users" });
+      }
+      users.push(req.user);
+
+      const roomChat = await Chat.create({
+        chatName: req.body.roomName,
+        isGroupChat: true,
+        users,
+        groupAdmin: req.user._id,
+      });
+
+      const roomChatDetails = await Chat.findOne({ _id: roomChat._id })
+        .populate("users", "-password")
+        .populate("groupAdmin", "-password");
+
+      res.status(201).json(roomChatDetails);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Server error", error: error.message });
