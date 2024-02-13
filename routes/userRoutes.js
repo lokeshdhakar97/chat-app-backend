@@ -28,7 +28,7 @@ router.get(
       };
 
       const users = await User.find(query).find({
-        _id: { $ne: req.user._id },
+        _id: { $ne: req.user?._id },
       });
 
       res.json(users.length > 0 ? users : { message: "No users found" });
