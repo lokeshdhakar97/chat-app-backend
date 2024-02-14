@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const chatModel = mongoose.Schema(
   {
-    chatName: { type: String, trim: true }, //group or one to one chat
+    chatName: {
+      type: String,
+      trim: true,
+      required: [true, "Room Name is required"],
+    },
     isGroupChat: { type: Boolean, default: false },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     latestMessage: {

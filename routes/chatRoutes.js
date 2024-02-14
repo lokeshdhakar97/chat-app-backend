@@ -20,6 +20,22 @@ router.post(
           .json({ message: "User ID is required to start conversation" });
       }
 
+      if (userId === req.user._id.toString()) {
+        return res
+          .status(400)
+          .json({ message: "You can't chat with yourself" });
+      }
+
+      if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       let isChatExist = await Chat.find({
         $and: [
           { users: { $elemMatch: { $eq: req.user._id } } },
@@ -90,17 +106,19 @@ router.post(
   isAuth,
   asyncHandler(async (req, res) => {
     try {
-      if (!req.body.users && !req.body.roomName) {
-        return res
-          .status(400)
-          .json({ message: "Users and Room Name is required" });
+      const { roomName } = req.body;
+
+      if (!req.body.users || !roomName) {
+        res.status(400).json({ message: "Users and Room Name is required" });
       }
       let users = JSON.parse(req.body.users);
+
       if (users.length < 2) {
-        return res
+        res
           .status(400)
-          .json({ message: "Room chat should have at least 2 users" });
+          .json({ message: "Group chat must have at least 2 members" });
       }
+
       users.push(req.user);
 
       const roomChat = await Chat.create({
