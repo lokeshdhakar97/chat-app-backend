@@ -13,15 +13,15 @@ router.post(
   asyncHandler(async (req, res) => {
     const { content, chatId } = req.body;
     if (!content || !content.trim()) {
-      return res.status(400).json({ message: "Content is required" });
+      res.status(400).json({ message: "Content is required" });
     }
 
     if (!chatId) {
-      return res.status(400).json({ message: "Chat ID is required" });
+      res.status(400).json({ message: "Chat ID is required" });
     }
 
     if (!chatId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: "Invalid chat ID" });
+      res.status(400).json({ message: "Invalid chat ID" });
     }
 
     let messageData = {
@@ -33,7 +33,6 @@ router.post(
       let message = await Message.create(messageData);
       message = await message.populate("sender", "username email");
       message = await message.populate("chat");
-      res.json(message);
       message = await User.populate(message, {
         path: "chat.users",
         select: "username email",
@@ -61,7 +60,6 @@ router.get(
     } else if (!req.query.chatId.match(/^[0-9a-fA-F]{24}$/)) {
       res.json({ message: "Invalid chat Id" });
     }
-    console.log(req.query.chatId);
     try {
       const message = await Message.find({ chat: req.query.chatId })
         .populate("sender", "username email")
