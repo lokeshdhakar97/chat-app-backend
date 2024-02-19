@@ -14,12 +14,12 @@ connectDB();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000",
   },
 });
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messsageRoutes);
@@ -37,8 +37,22 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
   });
 
-  socket.on("say_hello", (data) => {
-    console.log(data);
-    socket.emit("res", "Everthings Good");
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    socket.emit("connected");
+  });
+
+  socket.on("join_chat", (room) => {
+    socket.join(room);
+  });
+
+  socket.on("send_message", (sendMessage) => {
+    const chat = sendMessage?.chat;
+    if (!chat.users) return console.log("Chat.users not defined");
+
+    chat.users.forEach((user) => {
+      if (user._id === sendMessage?.sender?._id) return;
+      socket.in(user._id).emit("received_message", sendMessage);
+    });
   });
 });
