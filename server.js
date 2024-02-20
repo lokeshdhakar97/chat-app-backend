@@ -55,4 +55,8 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("received_message", sendMessage);
     });
   });
+
+  socket.on("typing", (room) => {
+    socket.in(room).emit("typing");
+  });
 });
